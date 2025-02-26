@@ -1,24 +1,46 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useState, useEffect } from 'react';
+import Modal from './componets/Modal';
+import { CookiesProvider, useCookies } from 'react-cookie';
 
-function App() {
+const App = () => {
+  const [openModal, setOpenModal] = useState(true);
+  const [hasCookie, setHasCookie] = useState(true);
+  const [appCookies, setAppCookies] = useCookies();
+
+  const getExpiredDate = (days) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date;
+  };
+
+  const closeModalUntilExpires = () => {
+    if (!appCookies) return;
+
+    const expires = getExpiredDate(1);
+    setAppCookies("MODAL_EXPIRES", true, { path: "/", expires });
+
+    setOpenModal(false);
+  };
+
+  useEffect(() => {
+    if (appCookies["MODAL_EXPIRES"]) return;
+    console.log(appCookies["MODAL_EXPIRES"]);
+    setHasCookie(false);
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <CookiesProvider>
+      <div className="App">
+        <button onClick={() => setOpenModal(true)}>모달 오픈</button>
+        {openModal && !hasCookie && (
+          <Modal
+            closeModal={() => setOpenModal(false)}
+            closeModalUntilExpires={closeModalUntilExpires}
+          />
+        )}
+      </div>
+    </CookiesProvider>
   );
 }
 
